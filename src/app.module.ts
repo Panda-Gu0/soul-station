@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { RoleModule } from './role/role.module';
+import { PermissionModule } from './permission/permission.module';
 import * as path from 'path';
 const isProd = process.env.NODE_ENV == "production";
 
@@ -24,7 +26,9 @@ const isProd = process.env.NODE_ENV == "production";
       database: process.env.DB_DATABASE
     }),
     UserModule,
-    AuthModule
+    AuthModule,
+    RoleModule,
+    PermissionModule
   ],
   controllers: [AppController],
   providers: [AppService],

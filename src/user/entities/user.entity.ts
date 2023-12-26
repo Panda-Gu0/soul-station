@@ -1,6 +1,7 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 import encry from '../../utils/crypto';
 import * as crypto from 'crypto';
+import { Role } from "src/role/entities/role.entity";
 
 @Entity("user")
 export class User {
@@ -22,8 +23,11 @@ export class User {
     @Column({ nullable: true })
     email: string; // 邮箱
 
-    @Column({ nullable: true })
-    role: string; // 角色类型
+    @ManyToMany(() => Role)
+    @JoinTable({
+        name: "user_role_relation"
+    })
+    roles: Role[]; // 角色类型
 
     @Column({ nullable: true })
     salt: string;
