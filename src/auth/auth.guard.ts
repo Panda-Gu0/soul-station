@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
       });
       request["user"] = payload;
     } catch {
-      throw new HttpException("token验证失败", HttpStatus.FORBIDDEN);
+      throw new HttpException("token已过期", HttpStatus.FORBIDDEN);
     }
     return true;
   }

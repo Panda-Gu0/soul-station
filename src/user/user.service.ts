@@ -3,27 +3,36 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ApiException } from 'src/common/filter/http-exception/api.exception';
 import { ApiErrorCode } from 'src/common/enums/api-error-code.enum';
+import { Role } from 'src/role/entities/role.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>
   ) { }
   /**
    * 用户注册
    * @param createUser 
    */
   async create(createUser: CreateUserDto) {
-    const { username } = createUser
+    const { username, password, roleIds } = createUser
     const existUser = await this.userRepository.findOne({ where: { username } });
     if(existUser) {
       throw new ApiException("该用户名已存在", ApiErrorCode.USER_EXIST);
     }
     try {
+      // 查询数组 roleIds 对应所有 role 的实例
+      const roles = await this.roleRepository.find({
+        where: {
+          id: In(roleIds)
+        }
+      })
       const newUser = await this.userRepository.create(createUser);
       await this.userRepository.save(newUser);
       return "注册成功";
