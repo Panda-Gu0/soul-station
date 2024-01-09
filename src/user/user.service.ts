@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { In, Repository } from 'typeorm';
@@ -33,7 +32,11 @@ export class UserService {
           id: In(roleIds)
         }
       })
-      const newUser = await this.userRepository.create(createUser);
+      const newUser = await this.userRepository.create({
+        username,
+        password,
+        roles
+      });
       await this.userRepository.save(newUser);
       return "注册成功";
     } catch(err) {
@@ -53,20 +56,22 @@ export class UserService {
     }
     return user;
   }
-  // async findAll() {
-  //   throw new ApiException("用户不存在", ApiErrorCode.USER_NOTEXIST);
-  //   return await this.userRepository.find();
-  // }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} user`;
-  // }
+  test(testParams) {
+    return testParams;
+  }
 
-  // update(id: number, updateUserDto: UpdateUserDto) {
-  //   return `This action updates a #${id} user`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} user`;
-  // }
+  async findPermissionNames(token: string, userInfo) {
+    const user = await this.userRepository.findOne({
+      where: { username: userInfo.username },
+      relations: ["roles", "roles.permissions"],
+    });
+    if(user) {
+      const permissions = user.roles.flatMap(role => role.permissions);
+      const permissionNames = permissions.map(item => item.name);
+      return [... new Set(permissionNames)];
+    } else {
+      return [];
+    }
+  }
 }
