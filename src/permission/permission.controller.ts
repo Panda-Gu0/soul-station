@@ -4,8 +4,8 @@ import { CreatePermissionDto } from './dto/create-permission.dto';
 
 @Controller('permission')
 export class PermissionController {
-  constructor(private readonly permissionService: PermissionService) { }
-  /** 
+  constructor(private readonly permissionService: PermissionService) {}
+  /**
    *  新增权限字段
    */
   @Post()
