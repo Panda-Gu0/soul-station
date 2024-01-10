@@ -23,7 +23,7 @@ export class UserService {
     const { username, password, roleIds } = createUser
     const existUser = await this.userRepository.findOne({ where: { username } });
     if(existUser) {
-      throw new ApiException("该用户名已存在", ApiErrorCode.USER_EXIST);
+      throw new ApiException("该用户名已存在,请重新输入", ApiErrorCode.USER_EXIST);
     }
     try {
       // 查询数组 roleIds 对应所有 role 的实例
@@ -52,9 +52,16 @@ export class UserService {
       where: { username }
     });
     if(!user) {
-      throw new HttpException("用户名不存在", HttpStatus.BAD_REQUEST);
+      throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
     }
     return user;
+  }
+  /**
+   * 查询所有用户
+   */
+  async findAll() {
+    const users = await this.userRepository.find();
+    return users;
   }
 
   test(testParams) {
