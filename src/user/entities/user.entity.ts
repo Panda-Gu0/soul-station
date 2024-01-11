@@ -38,6 +38,7 @@ export class User {
   })
   roles: Role[]; // 角色类型
 
+  @Exclude()
   @Column({ nullable: true })
   salt: string;
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
