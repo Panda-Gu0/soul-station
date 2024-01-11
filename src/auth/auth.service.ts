@@ -48,6 +48,8 @@ export class AuthService {
     const timeDifference = currentTime.getTime() - new Date(req.session.codeCreateTime).getTime();
     const expirationTime = 60 * 1000; // 设置60S过期时间
     if(timeDifference > expirationTime) {
+      delete req.session.code;
+      delete req.session.codeCreateTime;
       throw new HttpException("验证码已过期", HttpStatus.UNAUTHORIZED);
     }
 
