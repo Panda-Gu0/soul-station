@@ -32,7 +32,7 @@ export class User {
   @Column({ nullable: true })
   email: string; // 邮箱
 
-  @ManyToMany(() => Role)
+  @ManyToMany(() => Role, { eager: true }) // 加载关联角色数据
   @JoinTable({
     name: 'user_role_relation',
   })

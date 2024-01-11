@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Public, Permissions } from 'src/public/public.decorator';
@@ -8,20 +17,26 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Public()
-  @Post("register")
+  @Post('register')
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
-  @Post("test")
-  @Permissions("read", "create")
+  @Post('test')
+  @Permissions('read', 'create')
   test(@Body() testParams) {
     return this.userService.test(testParams);
   }
 
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  findAll(
+    @Query('page') page: number,
+    @Query('pageSize') pageSize: number,
+    @Query('username') username: string,
+    @Query('nickname') nickname: string,
+    @Query('email') email: string,
+  ) {
+    return this.userService.findAll(page, pageSize, username, nickname, email);
   }
 
   // @Get(':id')

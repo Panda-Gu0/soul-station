@@ -20,10 +20,13 @@ export class UserService {
    * @param createUser 
    */
   async create(createUser: CreateUserDto) {
-    const { username, password, roleIds } = createUser
+    const { username, password, nickname, email, roleIds } = createUser
     const existUser = await this.userRepository.findOne({ where: { username } });
-    if(existUser) {
+    if (existUser) {
       throw new ApiException("该用户名已存在,请重新输入", ApiErrorCode.USER_EXIST);
+    }
+    if(!roleIds) {
+      throw new HttpException("角色类型不能为空", HttpStatus.UNAUTHORIZED);
     }
     try {
       // 查询数组 roleIds 对应所有 role 的实例
@@ -35,11 +38,13 @@ export class UserService {
       const newUser = await this.userRepository.create({
         username,
         password,
+        nickname,
+        email,
         roles
       });
       await this.userRepository.save(newUser);
       return "注册成功";
-    } catch(err) {
+    } catch (err) {
       throw new HttpException(err, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -51,16 +56,32 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { username }
     });
-    if(!user) {
+    if (!user) {
       throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
     }
     return user;
   }
   /**
    * 查询所有用户
+   * @param page 页码，默认值：1
+   * @param pageSize 每页显示数量，默认值：10
    */
-  async findAll() {
-    const users = await this.userRepository.find();
+  async findAll(page: number = 1, pageSize: number = 10, username?: string, nickname?: string, email?: string) {
+    const query = this.userRepository.createQueryBuilder("user")
+      .skip((page - 1) * pageSize)
+      .take(pageSize)
+      .orderBy("user.create_time", "DESC")
+    // 模糊查询
+    if (username) {
+      query.andWhere("user.username LIKE :username", { username: `%${username}%` });
+    }
+    if (nickname) {
+      query.andWhere('user.nickname LIKE :nickname', { nickname: `%${nickname}%` });
+    }
+    if (email) {
+      query.andWhere('user.email LIKE :email', { email: `%${email}%` });
+    }
+    const users = await query.getMany();
     return users;
   }
 
@@ -73,7 +94,7 @@ export class UserService {
       where: { username: userInfo.username },
       relations: ["roles", "roles.permissions"],
     });
-    if(user) {
+    if (user) {
       const permissions = user.roles.flatMap(role => role.permissions);
       const permissionNames = permissions.map(item => item.name);
       return [... new Set(permissionNames)];
