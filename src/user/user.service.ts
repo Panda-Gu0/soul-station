@@ -6,6 +6,7 @@ import { In, Repository } from 'typeorm';
 import { ApiException } from 'src/common/filter/http-exception/api.exception';
 import { ApiErrorCode } from 'src/common/enums/api-error-code.enum';
 import { Role } from 'src/role/entities/role.entity';
+import { FindAllUserDto } from './dto/findAll-user.dto';
 
 @Injectable()
 export class UserService {
@@ -61,28 +62,30 @@ export class UserService {
     }
     return user;
   }
+
   /**
    * 查询所有用户
-   * @param page 页码，默认值：1
-   * @param pageSize 每页显示数量，默认值：10
    */
-  async findAll(page: number = 1, pageSize: number = 10, username?: string, nickname?: string, email?: string) {
-    const query = this.userRepository.createQueryBuilder("user")
+  async findAll(options: FindAllUserDto) {
+    const { page = 1, pageSize = 10, ...queryConditions } = options;
+    // 分页处理
+    const query = this.userRepository.createQueryBuilder('user')
       .skip((page - 1) * pageSize)
       .take(pageSize)
-      .orderBy("user.create_time", "DESC")
-    // 模糊查询
-    if (username) {
-      query.andWhere("user.username LIKE :username", { username: `%${username}%` });
-    }
-    if (nickname) {
-      query.andWhere('user.nickname LIKE :nickname', { nickname: `%${nickname}%` });
-    }
-    if (email) {
-      query.andWhere('user.email LIKE :email', { email: `%${email}%` });
-    }
+      .orderBy('user.create_time', 'DESC');
+    // 进行模糊查询
+    Object.entries(queryConditions).forEach(([key, value]) => {
+      if (value) {
+        query.andWhere(`user.${key} LIKE :${key}`, { [key]: `%${value}%` });
+      }
+    });
     const users = await query.getMany();
-    return users;
+    // 过滤敏感数据
+    const filteredUsers = users.map(user => {
+      const { password, salt, ...rest } = user;
+      return rest;
+    })
+    return filteredUsers;
   }
 
   test(testParams) {

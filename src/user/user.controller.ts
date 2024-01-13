@@ -11,6 +11,7 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Public, Permissions } from 'src/public/public.decorator';
+import { FindAllUserDto } from './dto/findAll-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -29,14 +30,9 @@ export class UserController {
   }
 
   @Get()
-  findAll(
-    @Query('page') page: number,
-    @Query('pageSize') pageSize: number,
-    @Query('username') username: string,
-    @Query('nickname') nickname: string,
-    @Query('email') email: string,
-  ) {
-    return this.userService.findAll(page, pageSize, username, nickname, email);
+  async findAll(@Query() options: FindAllUserDto) {
+    const users = await this.userService.findAll(options);
+    return users;
   }
 
   // @Get(':id')
