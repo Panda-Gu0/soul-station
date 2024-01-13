@@ -3,5 +3,6 @@ export class FindAllUserDto {
     pageSize?: number;
     username?: string;
     nickname?: string;
+    gender?: string;
     email?: string;
 }

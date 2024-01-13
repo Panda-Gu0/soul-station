@@ -29,6 +29,13 @@ export class User {
   @Column({ nullable: true })
   avatar: string; // 头像
 
+  @Column({
+    type: "enum",
+    enum: ["0", "1"], // 性别(0: 男性，1： 女性)
+    default: "0"
+  })
+  gender: string; 
+
   @Column({ nullable: true })
   email: string; // 邮箱
 
