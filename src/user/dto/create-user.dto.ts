@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional } from "class-validator";
+import { IsNotEmpty, IsString, IsOptional, IsIn } from "class-validator";
 
 export class CreateUserDto {
     @IsString({
@@ -32,6 +32,7 @@ export class CreateUserDto {
     @IsString({
         message: "用户性别必须为string类型"
     })
+    @IsIn(["0", "1"], { message: "用户性别只能传入'0'或'1'" })
     @IsOptional()
     gender?: string;
 

@@ -8,6 +8,7 @@ import { ApiErrorCode } from 'src/common/enums/api-error-code.enum';
 import { Role } from 'src/role/entities/role.entity';
 import { FindAllUserDto } from './dto/findAll-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class UserService {
@@ -91,7 +92,7 @@ export class UserService {
 
   /**
    * 更新用户信息
-   * @param username - 用户名
+   * @param id - 用户id
    * @param updateUser - 更新用户对象(仅允许修改部分字段)
    */
   async update(id: number, updateUser: UpdateUserDto) {
@@ -102,12 +103,11 @@ export class UserService {
       throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
     }
     try {
+      updateUser.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss')); // 数据库update_time字段更新
       await this.userRepository.update(user.id, updateUser);
-      // user.update_time = new Date(); // 修改信息成功更新数据库update_time字段
-      // bug:数据库update_time字段不更新，敏感数据可以修改
-      // await this.userRepository.save(user);
       return "用户信息更新成功";
     } catch(err) {
+      console.log(err);
       throw new HttpException("用户信息更新失败", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
