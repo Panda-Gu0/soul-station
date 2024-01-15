@@ -15,6 +15,10 @@ export class RoleService {
         @InjectRepository(Permission)
         private permissionRepository: Repository<Permission>
     ){ }
+    /**
+     * 创建用户权限
+     * @param createRole - 用户权限对象
+     */
     async create(createRole: CreateRoleDto) {
         const permissions = await this.permissionRepository.find({
             where: {
@@ -26,7 +30,7 @@ export class RoleService {
             where: { name }
         });
         if(existRole) {
-            throw new ApiException("角色已存在", ApiErrorCode.ROLE_EXIST);
+            throw new ApiException("角色类型已存在", ApiErrorCode.ROLE_EXIST);
         }
         return this.roelRepository.save({ permissions, name });
     };

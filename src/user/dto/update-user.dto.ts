@@ -1,4 +1,21 @@
-import { PartialType, PickType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-user.dto';
-// 过滤数据，仅允许修改以下字段
-export class UpdateUserDto extends PartialType(PickType(CreateUserDto, ['email', 'nickname'])) { }
+import { IsOptional, IsString } from "class-validator";
+
+export class UpdateUserDto {
+    @IsString({
+        message: "用户昵称必须为string类型"
+    })
+    @IsOptional()
+    nickname?: string;
+
+    @IsString({
+        message: "用户邮箱必须为string类型"
+    })
+    @IsOptional()
+    email?: string;
+
+    @IsString({
+        message: "用户性别必须为string类型"
+    })
+    @IsOptional()
+    gender?: string;
+}

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filter/http-exception/http-exception.filter';
 import { TransformInterceptor } from './common/interceptor/transform/transform.interceptor';
 import * as session from 'express-session';
+import { ValidationPipe } from './utils/validator-pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,7 @@ async function bootstrap() {
       cookie: { maxAge: null }, // 过期时间 ms 
     }),
   );
+  app.useGlobalPipes(new ValidationPipe);
   await app.listen(3000);
 }
 bootstrap();

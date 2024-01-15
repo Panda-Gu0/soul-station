@@ -27,9 +27,6 @@ export class UserService {
     if (existUser) {
       throw new ApiException("该用户名已存在,请重新输入", ApiErrorCode.USER_EXIST);
     }
-    if(!roleIds) {
-      throw new HttpException("角色类型不能为空", HttpStatus.UNAUTHORIZED);
-    }
     try {
       // 查询数组 roleIds 对应所有 role 的实例
       const roles = await this.roleRepository.find({
@@ -106,7 +103,7 @@ export class UserService {
     }
     try {
       await this.userRepository.update(user.id, updateUser);
-      user.update_time = new Date(); // 修改信息成功更新数据库update_time字段
+      // user.update_time = new Date(); // 修改信息成功更新数据库update_time字段
       // bug:数据库update_time字段不更新，敏感数据可以修改
       // await this.userRepository.save(user);
       return "用户信息更新成功";

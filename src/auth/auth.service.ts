@@ -37,9 +37,9 @@ export class AuthService {
     if (user?.password !== encry(password, user.salt)) {
       throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
     }
-    if(!code) {
-      return new HttpException("验证码不能为空", HttpStatus.UNAUTHORIZED);
-    } 
+    // if(!code) {
+    //   return new HttpException("验证码不能为空", HttpStatus.UNAUTHORIZED);
+    // } 
     if(code && req.session.code && code.toLowerCase() !== req.session.code.toLowerCase()) {
       return new HttpException("验证码错误", HttpStatus.UNAUTHORIZED);
     }
