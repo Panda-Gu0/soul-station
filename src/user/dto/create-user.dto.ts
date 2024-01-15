@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsIn } from "class-validator";
+import { IsNotEmpty, IsString, IsOptional, IsIn, IsEmail, MinLength, MaxLength } from "class-validator";
 
 export class CreateUserDto {
     @IsString({
@@ -18,14 +18,20 @@ export class CreateUserDto {
     @IsString({
         message: "用户邮箱必须为string类型"
     })
+    @IsEmail({}, {
+        message: "邮箱格式有误"
+    })
     @IsOptional()
     email?: string;
 
     @IsString({
         message: "用户密码必须为string类型"
     })
-    @IsNotEmpty({
-        message: "用户密码不能为空"
+    @MinLength(8, {
+        message: "密码长度不能少于8个字符"
+    })
+    @MaxLength(16, {
+        message: "密码长度不能超过16个字符"
     })
     password: string;
 

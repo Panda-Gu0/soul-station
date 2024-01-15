@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsIn } from "class-validator";
+import { IsOptional, IsString, IsIn, IsEmail } from "class-validator";
 
 export class UpdateUserDto {
     @IsString({
@@ -10,6 +10,9 @@ export class UpdateUserDto {
     @IsString({
         message: "用户邮箱必须为string类型"
     })
+    @IsEmail({}, {
+        message: "请输入正确的邮箱格式"
+    })
     @IsOptional()
     email?: string;
 
@@ -19,6 +22,6 @@ export class UpdateUserDto {
     @IsIn(["0", "1"], { message: "用户性别只能传入'0'或'1'" })
     @IsOptional()
     gender?: string;
-    
+
     update_time: Date
 }
