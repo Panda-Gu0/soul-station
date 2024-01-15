@@ -16,35 +16,40 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>
-  ) { }
+    private roleRepository: Repository<Role>,
+  ) {}
   /**
    * 用户注册
    * @param createUser - 用户对象
    */
   async create(createUser: CreateUserDto) {
-    const { username, password, nickname, email, roleIds, gender } = createUser
-    const existUser = await this.userRepository.findOne({ where: { username } });
+    const { username, password, nickname, email, roleIds, gender } = createUser;
+    const existUser = await this.userRepository.findOne({
+      where: { username },
+    });
     if (existUser) {
-      throw new ApiException("该用户名已存在,请重新输入", ApiErrorCode.USER_EXIST);
+      throw new ApiException(
+        '该用户名已存在,请重新输入',
+        ApiErrorCode.USER_EXIST,
+      );
     }
     try {
       // 查询数组 roleIds 对应所有 role 的实例
       const roles = await this.roleRepository.find({
         where: {
-          id: In(roleIds)
-        }
-      })
+          id: In(roleIds),
+        },
+      });
       const newUser = await this.userRepository.create({
         username,
         password,
         nickname,
         gender,
         email,
-        roles
+        roles,
       });
       await this.userRepository.save(newUser);
-      return "注册成功";
+      return '注册成功';
     } catch (err) {
       throw new HttpException(err, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -56,10 +61,10 @@ export class UserService {
    */
   async findOne(username: string) {
     const user = await this.userRepository.findOne({
-      where: { username }
+      where: { username },
     });
     if (!user) {
-      throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
+      throw new HttpException('该用户不存在', HttpStatus.BAD_REQUEST);
     }
     return user;
   }
@@ -71,7 +76,9 @@ export class UserService {
   async findAll(options: FindAllUserDto) {
     const { page = 1, pageSize = 10, ...queryConditions } = options;
     // 分页处理
-    const query = this.userRepository.createQueryBuilder('user')
+    const query = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.deleted = :deleted', { deleted: false }) // 已删除的用户不展示
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .orderBy('user.create_time', 'DESC');
@@ -83,34 +90,45 @@ export class UserService {
     });
     const users = await query.getMany();
     // 过滤敏感数据
-    const filteredUsers = users.map(user => {
+    const filteredUsers = users.map((user) => {
       const { password, salt, ...rest } = user;
       return rest;
-    })
+    });
     return filteredUsers;
   }
 
   /**
    * 更新用户信息
-   * @param id - 用户id
+   * @param username - 用户名
    * @param updateUser - 更新用户对象(仅允许修改部分字段)
    */
-  async update(id: number, updateUser: UpdateUserDto) {
+  async update(username: string, updateUser: UpdateUserDto) {
     const user = await this.userRepository.findOne({
-      where: { id }
+      where: { username },
     });
-    if(!user) {
-      throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
+    if (!user) {
+      throw new HttpException('该用户不存在', HttpStatus.BAD_REQUEST);
+    }
+    if (user.deleted) {
+      throw new HttpException('更新失败,该用户已注销', HttpStatus.BAD_REQUEST);
     }
     try {
       updateUser.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss')); // 数据库update_time字段更新
-      await this.userRepository.update(user.id, updateUser);
-      return "用户信息更新成功";
-    } catch(err) {
+      await this.userRepository.update({ username: user.username }, updateUser);
+      return '用户信息更新成功';
+    } catch (err) {
       console.log(err);
-      throw new HttpException("用户信息更新失败", HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        '用户信息更新失败',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
+
+  /**
+   * 删除用户信息
+   */
+  async delete() {}
 
   test(testParams) {
     return testParams;
@@ -119,12 +137,12 @@ export class UserService {
   async findPermissionNames(token: string, userInfo) {
     const user = await this.userRepository.findOne({
       where: { username: userInfo.username },
-      relations: ["roles", "roles.permissions"],
+      relations: ['roles', 'roles.permissions'],
     });
     if (user) {
-      const permissions = user.roles.flatMap(role => role.permissions);
-      const permissionNames = permissions.map(item => item.name);
-      return [... new Set(permissionNames)];
+      const permissions = user.roles.flatMap((role) => role.permissions);
+      const permissionNames = permissions.map((item) => item.name);
+      return [...new Set(permissionNames)];
     } else {
       return [];
     }

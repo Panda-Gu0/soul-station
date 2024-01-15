@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Req, Res } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
@@ -19,11 +25,11 @@ export class AuthService {
   async getCode(@Req() req, @Res() res) {
     const captcha = svgCaptcha.create({
       size: 4,
-      noise: 4
+      noise: 4,
     });
     req.session.code = captcha.text; // 存储验证码记录到session
     req.session.codeCreateTime = new Date(); // 存储验证码的创建时间
-    res.type("image/svg+xml");
+    res.type('image/svg+xml');
     res.send(captcha.data);
   }
 
@@ -34,23 +40,31 @@ export class AuthService {
   async login(loginAuth: LoginAuthDto, @Req() req) {
     const { username, password, code } = loginAuth;
     const user = await this.userService.findOne(username);
+    if (user.deleted) {
+      throw new HttpException('登录失败,该用户已注销', HttpStatus.BAD_REQUEST);
+    }
     if (user?.password !== encry(password, user.salt)) {
       throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
     }
     // if(!code) {
     //   return new HttpException("验证码不能为空", HttpStatus.UNAUTHORIZED);
-    // } 
-    if(code && req.session.code && code.toLowerCase() !== req.session.code.toLowerCase()) {
-      return new HttpException("验证码错误", HttpStatus.UNAUTHORIZED);
+    // }
+    if (
+      code &&
+      req.session.code &&
+      code.toLowerCase() !== req.session.code.toLowerCase()
+    ) {
+      return new HttpException('验证码错误', HttpStatus.UNAUTHORIZED);
     }
     // 验证验证码有效时间
     const currentTime = new Date();
-    const timeDifference = currentTime.getTime() - new Date(req.session.codeCreateTime).getTime();
+    const timeDifference =
+      currentTime.getTime() - new Date(req.session.codeCreateTime).getTime();
     const expirationTime = 60 * 1000; // 设置60S过期时间
-    if(timeDifference > expirationTime) {
+    if (timeDifference > expirationTime) {
       delete req.session.code;
       delete req.session.codeCreateTime;
-      throw new HttpException("验证码已过期", HttpStatus.UNAUTHORIZED);
+      throw new HttpException('验证码已过期', HttpStatus.UNAUTHORIZED);
     }
 
     const transformedUser = plainToClass(User, user); // 转换用户对象(过滤掉密码等敏感数据)

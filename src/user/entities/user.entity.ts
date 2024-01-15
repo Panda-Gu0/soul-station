@@ -26,15 +26,21 @@ export class User {
   @Column()
   password: string; // 密码
 
+  @Column({
+    nullable: true,
+    default: false,
+  })
+  deleted: boolean; // 标记用户是否被删除(true: 已删除，false：未删除)
+
   @Column({ nullable: true })
   avatar: string; // 头像
 
   @Column({
-    type: "enum",
-    enum: ["0", "1"], // 性别(0: 男性，1： 女性)
-    default: "0"
+    type: 'enum',
+    enum: ['0', '1'], // 性别(0: 男性，1： 女性)
+    default: '0',
   })
-  gender: string; 
+  gender: string;
 
   @Column({ nullable: true })
   email: string; // 邮箱
