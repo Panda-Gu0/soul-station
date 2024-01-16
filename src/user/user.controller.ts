@@ -16,6 +16,7 @@ import { FindAllUserDto } from './dto/findAll-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../utils/multer-config';
+import { ResetPwdDto } from './dto/reset-pwd.dto';
 
 @Controller('user')
 export class UserController {
@@ -56,6 +57,11 @@ export class UserController {
   @Permissions('read', 'create')
   test(@Body() testParams) {
     return this.userService.test(testParams);
+  }
+
+  @Post('setPwd')
+  async resetPassword(@Body() resetPwdDto: ResetPwdDto) {
+    return this.userService.resetPassword(resetPwdDto);
   }
 
   // @Get(':id')

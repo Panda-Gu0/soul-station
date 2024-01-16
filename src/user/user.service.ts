@@ -10,6 +10,9 @@ import { FindAllUserDto } from './dto/findAll-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as moment from 'moment';
 import { UploadService } from 'src/upload/upload.service';
+import { ResetPwdDto } from './dto/reset-pwd.dto';
+import * as crypto from 'crypto';
+import encry from '../utils/crypto';
 
 @Injectable()
 export class UserService {
@@ -153,10 +156,22 @@ export class UserService {
   }
 
   /**
-   * 修改用户密码
+   * 修改用户密码(管理员专用)
+   * @param resetPwdDto - 密码修改用户对象
    */
-  async resetPassword(username: string) {
-
+  async resetPassword(resetPwdDto: ResetPwdDto) {
+    const { username, newPassword } = resetPwdDto;
+    const user = await this.findOne(username);
+    // 重新设置新密码
+    const salt = crypto.randomBytes(4).toString('base64');
+    const hashedPassword = encry(newPassword, salt);
+    user.salt = salt;
+    user.password = hashedPassword;
+    user.update_time = new Date(moment().format("YYYY-MM-DD HH:mm:ss")); // 数据库update_time字段更新
+    await this.userRepository.save(user);
+    return {
+      data: "修改密码成功"
+    }
   }
 
   /**
