@@ -9,6 +9,7 @@ import { Role } from 'src/role/entities/role.entity';
 import { FindAllUserDto } from './dto/findAll-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as moment from 'moment';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,7 @@ export class UserService {
     private userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+    private uploadService: UploadService
   ) {}
   /**
    * 用户注册
@@ -49,7 +51,9 @@ export class UserService {
         roles,
       });
       await this.userRepository.save(newUser);
-      return '注册成功';
+      return {
+        data: '注册成功'
+      };
     } catch (err) {
       throw new HttpException(err, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -65,6 +69,9 @@ export class UserService {
     });
     if (!user) {
       throw new HttpException('该用户不存在', HttpStatus.BAD_REQUEST);
+    }
+    if(user.deleted) {
+      throw new HttpException('操作失败: 该用户已被删除,请联系管理员', HttpStatus.BAD_REQUEST);
     }
     return user;
   }
@@ -94,7 +101,9 @@ export class UserService {
       const { password, salt, ...rest } = user;
       return rest;
     });
-    return filteredUsers;
+    return {
+      data: filteredUsers
+    };
   }
 
   /**
@@ -103,19 +112,13 @@ export class UserService {
    * @param updateUser - 更新用户对象(仅允许修改部分字段)
    */
   async update(username: string, updateUser: UpdateUserDto) {
-    const user = await this.userRepository.findOne({
-      where: { username },
-    });
-    if (!user) {
-      throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
-    }
-    if (user.deleted) {
-      throw new HttpException("更新失败,该用户已注销", HttpStatus.BAD_REQUEST);
-    }
+    const user = await this.findOne(username);
     try {
       updateUser.update_time = new Date(moment().format("YYYY-MM-DD HH:mm:ss")); // 数据库update_time字段更新
       await this.userRepository.update({ username: user.username }, updateUser);
-      return "用户信息更新成功";
+      return {
+        data: "用户信息更新成功"
+      };
     } catch (err) {
       console.log(err);
       throw new HttpException(
@@ -126,17 +129,52 @@ export class UserService {
   }
 
   /**
+   * 上传用户头像
+   * @param username - 用户名
+   * @param file - 用户头像(仅支持图片)
+   */
+  async uploadAvatar(username: string, file: Express.Multer.File) {
+    const user = await this.findOne(username);
+    try {
+      const { data:url } = await this.uploadService.create(file);
+      if (url) {
+        user.avatar = url;
+        user.update_time = new Date(moment().format("YYYY-MM-DD HH:mm:ss")); // 数据库update_time字段更新
+        await this.userRepository.save(user);
+        return {
+          data: "用户头像上传成功",
+          url: user.avatar
+        }
+      } 
+    } catch(err) {
+      console.log(err);
+      throw new HttpException("上传图片失败", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * 修改用户密码
+   */
+  async resetPassword(username: string) {
+
+  }
+
+  /**
    * 删除用户信息
    * @param username - 用户名
    */
   async delete(username: string) {
     const user = await this.findOne(username);
-    if(user.deleted) {
-      throw new HttpException("删除失败,该用户已删除", HttpStatus.BAD_REQUEST);
-    }
     user.deleted = true;
-    await this.userRepository.save(user);
-    return "删除用户成功";
+    try {
+      await this.userRepository.save(user);
+    } catch(err) {
+      console.log(err);
+      throw new HttpException("删除用户失败", HttpStatus.BAD_REQUEST);
+    }
+    return {
+      data: "删除用户成功"
+    };
   }
 
   test(testParams) {

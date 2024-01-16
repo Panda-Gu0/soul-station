@@ -24,6 +24,6 @@ export class TransformInterceptor<T>
   ): Observable<Response<T>> {
     return next
       .handle()
-      .pipe(map((data) => ({ code: 200, data, describe: "请求成功" })));
+      .pipe(map((data) => ({ code: 200, data, success: true })));
   }
 }

@@ -5,13 +5,17 @@ import {
   Body,
   Delete,
   Query,
-  Put
+  Put,
+  UseInterceptors,
+  UploadedFile
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Public, Permissions } from 'src/public/public.decorator';
 import { FindAllUserDto } from './dto/findAll-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from '../utils/multer-config';
 
 @Controller('user')
 export class UserController {
@@ -35,6 +39,12 @@ export class UserController {
     @Body() updateUser: UpdateUserDto,
   ) {
     return this.userService.update(username, updateUser);
+  }
+
+  @Post('uploadAvatar')
+  @UseInterceptors(FileInterceptor("file", multerConfig))
+  async uploadAvatar(@Query("username") username: string, @UploadedFile() file: Express.Multer.File) {
+    return this.userService.uploadAvatar(username, file);
   }
 
   @Delete('delete')

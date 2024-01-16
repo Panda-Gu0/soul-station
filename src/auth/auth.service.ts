@@ -18,7 +18,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
   /**
    * 获取图片验证码
    */
@@ -40,15 +40,9 @@ export class AuthService {
   async login(loginAuth: LoginAuthDto, @Req() req) {
     const { username, password, code } = loginAuth;
     const user = await this.userService.findOne(username);
-    if (user.deleted) {
-      throw new HttpException('登录失败,该用户已注销', HttpStatus.BAD_REQUEST);
-    }
     if (user?.password !== encry(password, user.salt)) {
       throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
     }
-    // if(!code) {
-    //   return new HttpException("验证码不能为空", HttpStatus.UNAUTHORIZED);
-    // }
     if (
       code &&
       req.session.code &&
@@ -71,8 +65,10 @@ export class AuthService {
     const payload = { username: user.username, sub: user.id };
     const token = await this.jwtService.signAsync(payload);
     return {
-      data: token,
-      user: transformedUser,
+      data: {
+        token,
+        user: transformedUser,
+      }
     };
   }
 }

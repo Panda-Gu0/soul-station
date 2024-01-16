@@ -4,9 +4,10 @@ import { HttpExceptionFilter } from './common/filter/http-exception/http-excepti
 import { TransformInterceptor } from './common/interceptor/transform/transform.interceptor';
 import * as session from 'express-session';
 import { ValidationPipe } from './utils/validator-pipe';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useGlobalFilters(new HttpExceptionFilter()); // 注册异常处理器
   app.useGlobalInterceptors(new TransformInterceptor()); // 注册格式化拦截器
   app.use(
@@ -17,7 +18,10 @@ async function bootstrap() {
       cookie: { maxAge: null }, // 过期时间 ms 
     }),
   );
-  app.useGlobalPipes(new ValidationPipe);
+  app.useGlobalPipes(new ValidationPipe); // 全局设置入参校验
+  app.useStaticAssets("uploads", { // 设置静态资源路径与访问前缀
+    prefix: "/static/"
+  });
   await app.listen(3000);
 }
 bootstrap();

@@ -21,7 +21,6 @@ export class AuthGuard implements CanActivate {
       // controller 类型
       context.getClass()
     ]);
-    // return true;
     if(isPublic) {
       return true;
     }
