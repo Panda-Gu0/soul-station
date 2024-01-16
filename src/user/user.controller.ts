@@ -3,10 +3,9 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Delete,
   Query,
-  Put,
+  Put
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,7 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Public()
   @Post('register')
@@ -36,6 +35,11 @@ export class UserController {
     @Body() updateUser: UpdateUserDto,
   ) {
     return this.userService.update(username, updateUser);
+  }
+
+  @Delete('delete')
+  remove(@Query('username') username: string) {
+    return this.userService.delete(username);
   }
 
   @Post('test')

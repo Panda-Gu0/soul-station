@@ -107,19 +107,19 @@ export class UserService {
       where: { username },
     });
     if (!user) {
-      throw new HttpException('该用户不存在', HttpStatus.BAD_REQUEST);
+      throw new HttpException("该用户不存在", HttpStatus.BAD_REQUEST);
     }
     if (user.deleted) {
-      throw new HttpException('更新失败,该用户已注销', HttpStatus.BAD_REQUEST);
+      throw new HttpException("更新失败,该用户已注销", HttpStatus.BAD_REQUEST);
     }
     try {
-      updateUser.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss')); // 数据库update_time字段更新
+      updateUser.update_time = new Date(moment().format("YYYY-MM-DD HH:mm:ss")); // 数据库update_time字段更新
       await this.userRepository.update({ username: user.username }, updateUser);
-      return '用户信息更新成功';
+      return "用户信息更新成功";
     } catch (err) {
       console.log(err);
       throw new HttpException(
-        '用户信息更新失败',
+        "用户信息更新失败",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -127,8 +127,17 @@ export class UserService {
 
   /**
    * 删除用户信息
+   * @param username - 用户名
    */
-  async delete() {}
+  async delete(username: string) {
+    const user = await this.findOne(username);
+    if(user.deleted) {
+      throw new HttpException("删除失败,该用户已删除", HttpStatus.BAD_REQUEST);
+    }
+    user.deleted = true;
+    await this.userRepository.save(user);
+    return "删除用户成功";
+  }
 
   test(testParams) {
     return testParams;
