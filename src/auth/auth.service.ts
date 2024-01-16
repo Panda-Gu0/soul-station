@@ -12,20 +12,23 @@ import encry from '../utils/crypto';
 import { plainToClass } from 'class-transformer';
 import { User } from 'src/user/entities/user.entity';
 import * as svgCaptcha from 'svg-captcha';
+import { ApiException } from 'src/common/filter/http-exception/api.exception';
+import { ApiErrorCode } from 'src/common/enums/api-error-code.enum';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
   /**
    * 获取图片验证码
    */
   async getCode(@Req() req, @Res() res) {
     const captcha = svgCaptcha.create({
       size: 4,
-      noise: 4,
+      width: 95,
+      height: 50,
     });
     req.session.code = captcha.text; // 存储验证码记录到session
     req.session.codeCreateTime = new Date(); // 存储验证码的创建时间
@@ -41,7 +44,7 @@ export class AuthService {
     const { username, password, code } = loginAuth;
     const user = await this.userService.findOne(username);
     if (user?.password !== encry(password, user.salt)) {
-      throw new HttpException('密码错误', HttpStatus.UNAUTHORIZED);
+      throw new ApiException('密码错误', ApiErrorCode.PASSWORD_ERROR);
     }
     if (
       code &&
@@ -68,7 +71,7 @@ export class AuthService {
       data: {
         token,
         user: transformedUser,
-      }
+      },
     };
   }
 }
