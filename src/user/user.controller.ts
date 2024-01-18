@@ -7,7 +7,7 @@ import {
   Query,
   Put,
   UseInterceptors,
-  UploadedFile
+  UploadedFile,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,7 +20,7 @@ import { ResetPwdDto } from './dto/reset-pwd.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Public()
   @Post('register')
@@ -43,8 +43,11 @@ export class UserController {
   }
 
   @Post('uploadAvatar')
-  @UseInterceptors(FileInterceptor("file", multerConfig))
-  async uploadAvatar(@Query("username") username: string, @UploadedFile() file: Express.Multer.File) {
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async uploadAvatar(
+    @Query('username') username: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     return this.userService.uploadAvatar(username, file);
   }
 

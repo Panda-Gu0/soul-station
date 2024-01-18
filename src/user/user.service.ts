@@ -91,6 +91,7 @@ export class UserService {
     // 分页处理
     const query = this.userRepository
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role') // 连接并加载关联的角色数据
       .where('user.deleted = :deleted', { deleted: false }) // 已删除的用户不展示
       .skip((page - 1) * pageSize)
       .take(pageSize)
@@ -101,7 +102,21 @@ export class UserService {
         query.andWhere(`user.${key} LIKE :${key}`, { [key]: `%${value}%` });
       }
     });
-    const users = await query.getMany();
+    const totalQuery = this.userRepository
+      .createQueryBuilder('user') // 添加一个新的查询
+      .where('user.deleted = :deleted', { deleted: false });
+    // 应用搜索条件到totalQuery
+    Object.entries(queryConditions).forEach(([key, value]) => {
+      if (value) {
+        totalQuery.andWhere(`user.${key} LIKE :${key}`, {
+          [key]: `%${value}%`,
+        });
+      }
+    });
+    const [users, total] = await Promise.all([
+      query.getMany(),
+      totalQuery.getCount(),
+    ]);
     // 过滤敏感数据
     const filteredUsers = users.map((user) => {
       const { password, salt, ...rest } = user;
@@ -109,6 +124,7 @@ export class UserService {
     });
     return {
       data: filteredUsers,
+      total: total,
     };
   }
 
