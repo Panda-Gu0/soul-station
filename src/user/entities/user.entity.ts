@@ -4,12 +4,14 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import encry from '../../utils/crypto';
 import * as crypto from 'crypto';
 import { Role } from 'src/role/entities/role.entity';
 import { Exclude } from 'class-transformer';
+import { Posts } from 'src/posts/entities/post.entity';
 
 @Entity('user')
 export class User {
@@ -50,6 +52,9 @@ export class User {
     name: 'user_role_relation',
   })
   roles: Role[]; // 角色类型
+
+  @OneToMany((type) => Posts, (post) => post.author)
+  posts: Posts[]
 
   @Exclude()
   @Column({ nullable: true })

@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
 import { UploadModule } from './upload/upload.module';
+import { PostsModule } from './posts/posts.module';
 import * as path from 'path';
 const isProd = process.env.NODE_ENV == "production";
 
@@ -24,13 +25,15 @@ const isProd = process.env.NODE_ENV == "production";
       port: parseInt(process.env.DB_PORT),
       username: process.env.DB_USER,
       password: process.env.DB_PASSWD,
-      database: process.env.DB_DATABASE
+      database: process.env.DB_DATABASE,
+      entities: [__dirname + '/**/*.entity{.ts,.js}']
     }),
     UserModule,
     AuthModule,
     RoleModule,
     PermissionModule,
-    UploadModule
+    UploadModule,
+    PostsModule
   ],
   controllers: [AppController],
   providers: [AppService],
