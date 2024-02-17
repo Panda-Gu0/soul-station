@@ -53,8 +53,8 @@ export class User {
   })
   roles: Role[]; // 角色类型
 
-  @OneToMany((type) => Posts, (post) => post.author)
-  posts: Posts[]
+  @OneToMany(() => Posts, (post) => post.author)
+  posts: Posts[];
 
   @Exclude()
   @Column({ nullable: true })

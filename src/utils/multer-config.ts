@@ -6,7 +6,7 @@ import { diskStorage } from 'multer';
 
 export const multerConfig = {
   limits: {
-    fileSize: 1024 * 1024 * 5
+    fileSize: 1024 * 1024 * 50,
   },
   fileFilter: (_req, file: Express.Multer.File, cb) => {
     // 限制上传图片类型文件
@@ -25,6 +25,6 @@ export const multerConfig = {
       // 获取文件后缀
       const suffix = extname(file.originalname);
       return cb(null, `${randomName}${suffix}`);
-    }
-  })
+    },
+  }),
 };
