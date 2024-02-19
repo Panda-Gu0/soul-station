@@ -6,10 +6,12 @@ import { Posts } from './entities/post.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UserModule } from 'src/user/user.module';
 import { UploadService } from 'src/upload/upload.service';
+import { TagModule } from 'src/tag/tag.module';
+import { Tag } from 'src/tag/entities/tag.entity';
 
 @Module({
   controllers: [PostsController],
-  imports: [TypeOrmModule.forFeature([Posts, User]), UserModule],
+  imports: [TypeOrmModule.forFeature([Posts, User, Tag]), UserModule, TagModule],
   providers: [PostsService, UploadService],
 })
 export class PostsModule {}

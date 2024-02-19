@@ -9,6 +9,7 @@ import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
 import { UploadModule } from './upload/upload.module';
 import { PostsModule } from './posts/posts.module';
+import { TagModule } from './tag/tag.module';
 import * as path from 'path';
 const isProd = process.env.NODE_ENV == "production";
 
@@ -33,7 +34,8 @@ const isProd = process.env.NODE_ENV == "production";
     RoleModule,
     PermissionModule,
     UploadModule,
-    PostsModule
+    PostsModule,
+    TagModule
   ],
   controllers: [AppController],
   providers: [AppService],

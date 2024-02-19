@@ -16,4 +16,7 @@ export class CreatePostDto {
         message: "内容不能为空"
     })
     content: string;
+
+    // @IsOptional()
+    // tags?: string[]
 }
