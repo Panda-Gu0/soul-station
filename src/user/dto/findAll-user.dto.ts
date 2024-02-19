@@ -1,7 +1,4 @@
 import {
-  IsArray,
-  IsInt,
-  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -38,6 +35,18 @@ export class FindAllUserDto {
   email?: string;
 
   @IsOptional()
-  @IsString({ message: 'roleId必须为string类型' })
-  roleId?: string;
+  @IsString({ message: 'roleId必须为number类型' })
+  roleId?: number;
+
+  @IsOptional()
+  startCreateTime?: Date;
+
+  @IsOptional()
+  endCreateTime?: Date;
+
+  @IsOptional()
+  startUpdateTime?: Date;
+
+  @IsOptional()
+  endUpdateTime?: Date;
 }

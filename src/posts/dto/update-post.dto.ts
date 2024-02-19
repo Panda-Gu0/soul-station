@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class UpdatePostDto {
     @IsNotEmpty({
@@ -24,6 +24,9 @@ export class UpdatePostDto {
         message: "内容不能为空"
     })
     content: string;
-    
+
+    @IsOptional()
+    cover_url?: string;
+
     update_time: Date;
 }

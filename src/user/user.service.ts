@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { ApiException } from 'src/common/filter/http-exception/api.exception';
 import { ApiErrorCode } from 'src/common/enums/api-error-code.enum';
 import { Role } from 'src/role/entities/role.entity';
@@ -14,6 +14,8 @@ import { ResetPwdDto } from './dto/reset-pwd.dto';
 import * as crypto from 'crypto';
 import encry from '../utils/crypto';
 
+type AllowedField = "create_time" | "update_time";
+
 @Injectable()
 export class UserService {
   constructor(
@@ -22,7 +24,21 @@ export class UserService {
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
     private uploadService: UploadService,
-  ) {}
+  ) { }
+ /**
+   * 搜索时间范围
+   * @param query - 查询参数对象
+   * @param field - 创建时间或更新时间
+   */
+ getTimeRange(query: SelectQueryBuilder<User>, field: AllowedField, startTime: Date | string, endTime: Date | string) {
+  if (startTime && endTime) {
+    query.andWhere(`user.${field} BETWEEN :startTime AND :endTime`, {
+      startTime: new Date(startTime),
+      endTime: new Date(endTime)
+    });
+  }
+}
+
   /**
    * 用户注册
    * @param createUser - 用户对象
@@ -87,15 +103,22 @@ export class UserService {
    * @param options - 查询参数
    */
   async findAll(options: FindAllUserDto) {
-    const { page = 1, pageSize = 10, ...queryConditions } = options;
+    const { page = 1, pageSize = 10, roleId, startCreateTime, endCreateTime, startUpdateTime, endUpdateTime,  ...queryConditions } = options;
     // 分页处理
     const query = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role') // 连接并加载关联的角色数据
       .where('user.deleted = :deleted', { deleted: false }) // 已删除的用户不展示
+      .where((qb) => {
+        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
+        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
+      })
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .orderBy('user.create_time', 'DESC');
+    if (roleId) {
+      query.andWhere('role.id = :roleId', { roleId });
+    }
     // 进行模糊查询
     Object.entries(queryConditions).forEach(([key, value]) => {
       if (value) {
@@ -104,7 +127,15 @@ export class UserService {
     });
     const totalQuery = this.userRepository
       .createQueryBuilder('user') // 添加一个新的查询
-      .where('user.deleted = :deleted', { deleted: false });
+      .leftJoinAndSelect('user.roles', 'role') // 连接并加载关联的角色数据
+      .where('user.deleted = :deleted', { deleted: false })
+      .where((qb) => {
+        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
+        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
+      })
+    if (roleId) {
+      totalQuery.andWhere('role.id = :roleId', { roleId });
+    }
     // 应用搜索条件到totalQuery
     Object.entries(queryConditions).forEach(([key, value]) => {
       if (value) {

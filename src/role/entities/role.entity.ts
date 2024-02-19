@@ -1,4 +1,5 @@
 import { Permission } from "src/permission/entities/permission.entity";
+import { User } from "src/user/entities/user.entity";
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()

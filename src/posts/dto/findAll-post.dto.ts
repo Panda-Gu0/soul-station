@@ -24,5 +24,17 @@ import {
     })
     @IsOptional()
     nickname?: string;
+
+    @IsOptional()
+    startCreateTime?: Date;
+
+    @IsOptional()
+    endCreateTime?: Date;
+
+    @IsOptional()
+    startUpdateTime?: Date;
+
+    @IsOptional()
+    endUpdateTime?: Date;
   }
   

@@ -9,12 +9,16 @@ import {
   Req,
   Query,
   Put,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Public } from 'src/public/public.decorator';
 import { FindAllPostsDto } from './dto/findAll-post.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerConfig } from 'src/utils/multer-config';
 
 @Controller('posts')
 export class PostsController {
@@ -39,6 +43,16 @@ export class PostsController {
   async findAll(@Query() options: FindAllPostsDto) {
     const posts = await this.postsService.findAll(options);
     return posts;
+  }
+
+  @Public()
+  @Post('uploadCover')
+  @UseInterceptors(FileInterceptor('file', multerConfig))
+  async uploadAvatar(
+    @Query('postId') postId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.postsService.uploadCover(postId, file);
   }
 
   @Public()

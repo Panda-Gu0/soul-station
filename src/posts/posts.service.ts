@@ -2,11 +2,14 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Posts } from './entities/post.entity';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
 import * as moment from 'moment';
 import { FindAllPostsDto } from './dto/findAll-post.dto';
+import { UploadService } from 'src/upload/upload.service';
+
+type AllowedField = "create_time" | "update_time";
 
 @Injectable()
 export class PostsService {
@@ -14,6 +17,7 @@ export class PostsService {
     @InjectRepository(Posts)
     private postRepository: Repository<Posts>,
     private userService: UserService,
+    private uploadService: UploadService,
   ) { }
   /**
    * 数据格式化
@@ -32,6 +36,20 @@ export class PostsService {
     }
     const filteredPost = filterPost();
     return filteredPost;
+  }
+
+  /**
+   * 搜索时间范围
+   * @param query - 查询参数对象
+   * @param field - 创建时间或更新时间
+   */
+  getTimeRange(query: SelectQueryBuilder<Posts>, field: AllowedField, startTime: Date | string, endTime: Date | string) {
+    if (startTime && endTime) {
+      query.andWhere(`post.${field} BETWEEN :startTime AND :endTime`, {
+        startTime: new Date(startTime),
+        endTime: new Date(endTime)
+      });
+    }
   }
 
   /**
@@ -73,51 +91,86 @@ export class PostsService {
     }
     return this.dataFormat(post);
   }
+  
+  /**
+   * 修改文章封面
+   */
+  async uploadCover(postId: number, file: Express.Multer.File) {
+    const post = await this.findOne(postId, false);
+    try {
+      const { data: url } = await this.uploadService.create(file);
+      if (url) {
+        post.coverUrl = url;
+        post.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss')); // 数据库update_time字段更新
+        await this.postRepository.save(post);
+        return {
+          data: '文章封面修改成功'
+        };
+      }
+    } catch (err) {
+      console.log(err);
+      throw new HttpException('上传图片失败', HttpStatus.BAD_REQUEST);
+    }
+  }
 
   /**
    * 查询所有文章
    * @param options - 查询参数
    */
   async findAll(options: FindAllPostsDto) {
-    const { page = 1, pageSize = 10, ...queryConditions } = options;
+    const { page = 1, pageSize = 10, startCreateTime, endCreateTime, username, startUpdateTime, endUpdateTime, ...queryConditions } = options;
     // 分页处理
     const query = this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'author')
+      .innerJoin('author.posts', 'author_posts') // 关联用户的文章
+      .where((qb) => {
+        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
+        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
+        if (username) {
+          qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
+        }
+      })
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .orderBy('post.create_time', 'DESC');
-      // 进行模糊查询
-      Object.entries(queryConditions).forEach(([key, value]) => {
-        if (value) {
-          console.log(`post.${key} LIKE :${key}`, { [key]: `%${value}%` });
-
-          query.andWhere(`post.${key} LIKE :${key}`, { [key]: `%${value}%` });
+    // 进行模糊查询
+    Object.entries(queryConditions).forEach(([key, value]) => {
+      if (value) {
+        query.andWhere(`post.${key} LIKE :${key}`, { [key]: `%${value}%` });
+      }
+    });
+    // 计算总条数
+    const totalQuery = this.postRepository
+      .createQueryBuilder('post')
+      .innerJoinAndSelect('post.author', 'author')
+      .innerJoin('author.posts', 'author_posts') // 关联用户的文章
+      .where((qb) => {
+        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
+        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
+        if (username) {
+          qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
         }
-      });
-      const totalQuery = this.postRepository.createQueryBuilder('post') // 添加一个新的查询
-      // 应用搜索条件到totalQuery
-      Object.entries(queryConditions).forEach(([key, value]) => {
-        if (value) {
-          totalQuery.andWhere(`post.${key} LIKE :${key}`, {
-            [key]: `%${value}%`,
-          });
-        }
-      });
-      const [posts, total] = await Promise.all([
-        query.getMany(),
-        totalQuery.getCount(),
-      ]);
-      // 过滤敏感数据
-      const filteredPosts = posts.map((post) => {
-        return post;
-      });
-     console.log(posts);
-
-      return {
-        data: filteredPosts,
-        total: total,
-      };
+      })
+    Object.entries(queryConditions).forEach(([key, value]) => {
+      if (value) {
+        totalQuery.andWhere(`post.${key} LIKE :${key}`, {
+          [key]: `%${value}%`,
+        });
+      }
+    });
+    const [posts, total] = await Promise.all([
+      query.getMany(),
+      totalQuery.getCount(),
+    ]);
+    // 过滤敏感数据
+    const filteredPosts = posts.map((post) => {
+      return this.dataFormat(post);
+    });
+    return {
+      data: filteredPosts,
+      total: total,
+    };
   }
 
   /**
@@ -141,6 +194,7 @@ export class PostsService {
 
   /**
    * 文章点赞
+   * @param postId - 文章Id
    */
   async likePost(postId: number) {
     const post = await this.findOne(postId, false);
@@ -153,6 +207,7 @@ export class PostsService {
 
   /**
    * 取消点赞
+   * @param postId - 文章Id
    */
   async dislikePost(postId: number) {
     const post = await this.findOne(postId, false);
@@ -165,6 +220,7 @@ export class PostsService {
 
   /**
    * 删除文章
+   * @param postId - 文章Id
    */
   async deletePost(postId: number) {
     const post = await this.findOne(postId, false);
