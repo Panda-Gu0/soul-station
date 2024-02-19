@@ -59,6 +59,10 @@ export class User {
   @Exclude()
   @Column({ nullable: true })
   salt: string;
+
+  @Column({ nullable: true })
+  birthday: Date; // 生日
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   create_time: Date;
 

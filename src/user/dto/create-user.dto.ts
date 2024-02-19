@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsIn, IsEmail, MinLength, MaxLength } from "class-validator";
+import { IsNotEmpty, IsString, IsOptional, IsIn, IsEmail, MinLength, MaxLength, IsDate, Matches } from "class-validator";
 
 export class CreateUserDto {
     @IsString({
@@ -46,4 +46,10 @@ export class CreateUserDto {
         message: "用户角色类型不能为空"
     })
     roleIds: number[];
+
+    @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+        message: '生日格式必须为YYYY-MM-DD',
+      })
+    @IsOptional()
+    birthday?: Date
 }

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsIn, IsEmail } from 'class-validator';
+import { IsOptional, IsString, IsIn, IsEmail, IsDate, Matches } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString({
@@ -27,4 +27,10 @@ export class UpdateUserDto {
   gender?: string;
 
   update_time: Date;
+
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: '生日格式必须为YYYY-MM-DD',
+  })
+  @IsOptional()
+  birthday?: Date
 }
