@@ -4,6 +4,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -36,7 +37,10 @@ export class Posts {
   @JoinColumn({ name: 'user_id' })
   author: User;
 
-  @ManyToMany(() => Tag, (tag) => tag.posts)
+  @ManyToMany(() => Tag, { eager: true })
+  @JoinTable({
+    name: 'post_tag_relation',
+  })
   tags: Tag[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

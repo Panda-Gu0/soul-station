@@ -11,7 +11,11 @@ import { Tag } from 'src/tag/entities/tag.entity';
 
 @Module({
   controllers: [PostsController],
-  imports: [TypeOrmModule.forFeature([Posts, User, Tag]), UserModule, TagModule],
+  imports: [
+    TypeOrmModule.forFeature([Posts, User, Tag]),
+    UserModule,
+    TagModule,
+  ],
   providers: [PostsService, UploadService],
 })
 export class PostsModule {}

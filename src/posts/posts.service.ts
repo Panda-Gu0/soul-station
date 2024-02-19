@@ -2,14 +2,15 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { Posts } from './entities/post.entity';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
 import * as moment from 'moment';
 import { FindAllPostsDto } from './dto/findAll-post.dto';
 import { UploadService } from 'src/upload/upload.service';
+import { Tag } from 'src/tag/entities/tag.entity';
 
-type AllowedField = "create_time" | "update_time";
+type AllowedField = 'create_time' | 'update_time';
 
 @Injectable()
 export class PostsService {
@@ -18,7 +19,9 @@ export class PostsService {
     private postRepository: Repository<Posts>,
     private userService: UserService,
     private uploadService: UploadService,
-  ) { }
+    @InjectRepository(Tag)
+    private tagRepository: Repository<Tag>,
+  ) {}
   /**
    * 数据格式化
    */
@@ -26,14 +29,14 @@ export class PostsService {
     const filterUser = () => {
       let { password, salt, roles, ...reset } = post.author;
       return reset;
-    }
+    };
     const filterPost = () => {
       let { author, ...reset } = post;
       return {
         ...reset,
-        author: filterUser()
+        author: filterUser(),
       };
-    }
+    };
     const filteredPost = filterPost();
     return filteredPost;
   }
@@ -43,11 +46,16 @@ export class PostsService {
    * @param query - 查询参数对象
    * @param field - 创建时间或更新时间
    */
-  getTimeRange(query: SelectQueryBuilder<Posts>, field: AllowedField, startTime: Date | string, endTime: Date | string) {
+  getTimeRange(
+    query: SelectQueryBuilder<Posts>,
+    field: AllowedField,
+    startTime: Date | string,
+    endTime: Date | string,
+  ) {
     if (startTime && endTime) {
       query.andWhere(`post.${field} BETWEEN :startTime AND :endTime`, {
         startTime: new Date(startTime),
-        endTime: new Date(endTime)
+        endTime: new Date(endTime),
       });
     }
   }
@@ -57,14 +65,24 @@ export class PostsService {
    */
   async create(username: string, post: CreatePostDto) {
     if (!username) {
-      throw new HttpException("作者名称不能为空!", HttpStatus.BAD_REQUEST);
+      throw new HttpException('作者名称不能为空!', HttpStatus.BAD_REQUEST);
     }
     const user = await this.userService.findOne(username);
+    const tags = await this.tagRepository.find({
+      where: { id: In(post.tags) },
+    });
     const newPost = this.postRepository.create({
       ...post,
       author: user,
+      tags: tags,
     });
     await this.postRepository.save(newPost);
+    // 标签关联文章数量自增
+    for (const tag of tags) {
+      tag.postCount += 1;
+      await this.tagRepository.save(tag);
+      newPost.tags = tags;
+    }
     return this.dataFormat(newPost);
   }
 
@@ -75,15 +93,15 @@ export class PostsService {
    */
   async findOne(postId: number, isDetail: boolean) {
     if (!postId) {
-      throw new HttpException("文章id不能为空!", HttpStatus.NOT_FOUND);
+      throw new HttpException('文章id不能为空!', HttpStatus.NOT_FOUND);
     }
     let relations = ['author'];
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: relations // 关联查询
+      relations: relations, // 关联查询
     });
     if (!post) {
-      throw new HttpException("该文章不存在", HttpStatus.NOT_FOUND);
+      throw new HttpException('该文章不存在', HttpStatus.NOT_FOUND);
     }
     if (isDetail) {
       post.readingCount += 1; // 增加阅读量
@@ -91,7 +109,7 @@ export class PostsService {
     }
     return this.dataFormat(post);
   }
-  
+
   /**
    * 修改文章封面
    */
@@ -104,7 +122,7 @@ export class PostsService {
         post.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss')); // 数据库update_time字段更新
         await this.postRepository.save(post);
         return {
-          data: '文章封面修改成功'
+          data: '文章封面修改成功',
         };
       }
     } catch (err) {
@@ -118,15 +136,24 @@ export class PostsService {
    * @param options - 查询参数
    */
   async findAll(options: FindAllPostsDto) {
-    const { page = 1, pageSize = 10, startCreateTime, endCreateTime, username, startUpdateTime, endUpdateTime, ...queryConditions } = options;
+    const {
+      page = 1,
+      pageSize = 10,
+      startCreateTime,
+      endCreateTime,
+      username,
+      startUpdateTime,
+      endUpdateTime,
+      ...queryConditions
+    } = options;
     // 分页处理
     const query = this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'author')
       .innerJoin('author.posts', 'author_posts') // 关联用户的文章
       .where((qb) => {
-        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
-        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
+        this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
+        this.getTimeRange(qb, 'update_time', startUpdateTime, endUpdateTime);
         if (username) {
           qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
         }
@@ -146,12 +173,12 @@ export class PostsService {
       .innerJoinAndSelect('post.author', 'author')
       .innerJoin('author.posts', 'author_posts') // 关联用户的文章
       .where((qb) => {
-        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
-        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
+        this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
+        this.getTimeRange(qb, 'update_time', startUpdateTime, endUpdateTime);
         if (username) {
           qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
         }
-      })
+      });
     Object.entries(queryConditions).forEach(([key, value]) => {
       if (value) {
         totalQuery.andWhere(`post.${key} LIKE :${key}`, {
@@ -174,8 +201,7 @@ export class PostsService {
   }
 
   /**
-   * 修改文章
-   * @param postId - 文章Id
+   * 修改文章(tag还没修改)
    * @param updatePost - 更新文章对象(仅允许修改部分字段)
    */
   async update(updatePost: UpdatePostDto) {
@@ -184,11 +210,11 @@ export class PostsService {
       updatePost.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
       await this.postRepository.update({ id: post.id }, updatePost);
       return {
-        data: "文章修改成功"
+        data: '文章修改成功',
       };
     } catch (err) {
       console.log(err);
-      throw new HttpException("文章修改失败", HttpStatus.BAD_REQUEST);
+      throw new HttpException('文章修改失败', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -202,7 +228,7 @@ export class PostsService {
       post.likeCount++;
       await this.postRepository.save(post);
     }
-    return "操作成功";
+    return '操作成功';
   }
 
   /**
@@ -215,7 +241,7 @@ export class PostsService {
       post.likeCount--;
       await this.postRepository.save(post);
     }
-    return "操作成功";
+    return '操作成功';
   }
 
   /**
@@ -227,11 +253,11 @@ export class PostsService {
     try {
       await this.postRepository.delete(post.id);
       return {
-        data: "文章删除成功"
+        data: '文章删除成功',
       };
     } catch (err) {
       console.log(err);
-      throw new HttpException("文章删除失败", HttpStatus.BAD_REQUEST);
+      throw new HttpException('文章删除失败', HttpStatus.BAD_REQUEST);
     }
   }
 }
