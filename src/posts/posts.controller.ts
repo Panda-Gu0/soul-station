@@ -41,8 +41,7 @@ export class PostsController {
   @Public()
   @Get()
   async findAll(@Query() options: FindAllPostsDto) {
-    const posts = await this.postsService.findAll(options);
-    return posts;
+    return await this.postsService.findAll(options);
   }
 
   @Public()
@@ -69,8 +68,8 @@ export class PostsController {
 
   @Public()
   @Put('update')
-  async update( @Body() updateUser: UpdatePostDto) {
-    return this.postsService.update(updateUser);
+  async update( @Body() updatePost: UpdatePostDto) {
+    return this.postsService.update(updatePost);
   }
 
   @Public()

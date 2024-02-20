@@ -1,6 +1,7 @@
 import {
     IsOptional,
     IsString,
+    Matches,
   } from 'class-validator';
   
   export class FindAllPostsDto {
@@ -36,5 +37,9 @@ import {
 
     @IsOptional()
     endUpdateTime?: Date;
+
+    @IsOptional()
+    @Matches(/^\[\d+(, \d+)*\]$/, { message: 'tagIds格式错误' })
+    tagIds?: string;
   }
   

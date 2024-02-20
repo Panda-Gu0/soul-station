@@ -37,7 +37,7 @@ export class Posts {
   @JoinColumn({ name: 'user_id' })
   author: User;
 
-  @ManyToMany(() => Tag, { eager: true })
+  @ManyToMany(() => Tag, (tag) => tag.posts, { eager: true })
   @JoinTable({
     name: 'post_tag_relation',
   })

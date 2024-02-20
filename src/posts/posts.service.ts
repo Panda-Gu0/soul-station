@@ -21,7 +21,7 @@ export class PostsService {
     private uploadService: UploadService,
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
-  ) {}
+  ) { }
   /**
    * 数据格式化
    */
@@ -62,6 +62,8 @@ export class PostsService {
 
   /**
    * 新建文章
+   * @param username - 用户名
+   * @param post - 文章对象
    */
   async create(username: string, post: CreatePostDto) {
     if (!username) {
@@ -105,7 +107,12 @@ export class PostsService {
     }
     if (isDetail) {
       post.readingCount += 1; // 增加阅读量
+      for (const tag of post.tags) { // 增加标签点击量
+        tag.clickCount += 1;
+        await this.tagRepository.save(tag);
+      }
       await this.postRepository.save(post);
+
     }
     return this.dataFormat(post);
   }
@@ -144,19 +151,28 @@ export class PostsService {
       username,
       startUpdateTime,
       endUpdateTime,
+      tagIds,
       ...queryConditions
     } = options;
     // 分页处理
     const query = this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'author')
-      .innerJoinAndSelect('post.tags', 'tag')
+      .leftJoinAndSelect('post.tags', 'tag')
       .innerJoin('author.posts', 'author_posts') // 关联用户的文章
       .where((qb) => {
         this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
         this.getTimeRange(qb, 'update_time', startUpdateTime, endUpdateTime);
         if (username) {
           qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
+        }
+        // 多个标签筛选文章
+        let tagIdsArr = JSON.parse(tagIds);
+        if (tagIdsArr && tagIdsArr.length > 0) {
+          for (let i = 0; i < tagIdsArr.length; i++) {
+            qb.andWhere(`EXISTS (SELECT 1 FROM post_tag_relation WHERE post_tag_relation.postId = post.id AND post_tag_relation.tagId = :tagId${i})`)
+              .setParameter(`tagId${i}`, tagIdsArr[i]);
+          }
         }
       })
       .skip((page - 1) * pageSize)
@@ -168,29 +184,9 @@ export class PostsService {
         query.andWhere(`post.${key} LIKE :${key}`, { [key]: `%${value}%` });
       }
     });
-    // 计算总条数
-    const totalQuery = this.postRepository
-      .createQueryBuilder('post')
-      .innerJoinAndSelect('post.author', 'author')
-      .innerJoinAndSelect('post.tags', 'tag')
-      .innerJoin('author.posts', 'author_posts') // 关联用户的文章
-      .where((qb) => {
-        this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
-        this.getTimeRange(qb, 'update_time', startUpdateTime, endUpdateTime);
-        if (username) {
-          qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
-        }
-      });
-    Object.entries(queryConditions).forEach(([key, value]) => {
-      if (value) {
-        totalQuery.andWhere(`post.${key} LIKE :${key}`, {
-          [key]: `%${value}%`,
-        });
-      }
-    });
     const [posts, total] = await Promise.all([
       query.getMany(),
-      totalQuery.getCount(),
+      query.getCount(),
     ]);
     // 过滤敏感数据
     const filteredPosts = posts.map((post) => {
@@ -203,7 +199,7 @@ export class PostsService {
   }
 
   /**
-   * 修改文章(tag还没修改)
+   * 修改文章
    * @param updatePost - 更新文章对象(仅允许修改部分字段)
    */
   async update(updatePost: UpdatePostDto) {
@@ -280,6 +276,11 @@ export class PostsService {
   async deletePost(postId: number) {
     const post = await this.findOne(postId, false);
     try {
+      const tags = post.tags;
+      for (const tag of tags) {
+        tag.postCount -= 1;
+        await this.tagRepository.save(tag);
+      }
       await this.postRepository.delete(post.id);
       return {
         data: '文章删除成功',

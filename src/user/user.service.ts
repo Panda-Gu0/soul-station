@@ -125,28 +125,9 @@ export class UserService {
         query.andWhere(`user.${key} LIKE :${key}`, { [key]: `%${value}%` });
       }
     });
-    const totalQuery = this.userRepository
-      .createQueryBuilder('user') // 添加一个新的查询
-      .leftJoinAndSelect('user.roles', 'role') // 连接并加载关联的角色数据
-      .where('user.deleted = :deleted', { deleted: false })
-      .where((qb) => {
-        this.getTimeRange(qb, "create_time", startCreateTime, endCreateTime);
-        this.getTimeRange(qb, "update_time", startUpdateTime, endUpdateTime);
-      })
-    if (roleId) {
-      totalQuery.andWhere('role.id = :roleId', { roleId });
-    }
-    // 应用搜索条件到totalQuery
-    Object.entries(queryConditions).forEach(([key, value]) => {
-      if (value) {
-        totalQuery.andWhere(`user.${key} LIKE :${key}`, {
-          [key]: `%${value}%`,
-        });
-      }
-    });
     const [users, total] = await Promise.all([
       query.getMany(),
-      totalQuery.getCount(),
+      query.getCount(),
     ]);
     // 过滤敏感数据
     const filteredUsers = users.map((user) => {

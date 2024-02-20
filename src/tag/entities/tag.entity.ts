@@ -21,6 +21,9 @@ export class Tag {
   @Column({ type: 'int', default: 0, name: 'post_count' })
   postCount: number; // 关联文章数量
 
+  @Column({ type: 'int', default: 0, name: 'click_count' })
+  clickCount: number; // 相关文章的点击量
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   create_time: Date;
 
