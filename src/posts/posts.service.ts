@@ -95,7 +95,7 @@ export class PostsService {
     if (!postId) {
       throw new HttpException('文章id不能为空!', HttpStatus.NOT_FOUND);
     }
-    let relations = ['author'];
+    let relations = ['author', 'tags'];
     const post = await this.postRepository.findOne({
       where: { id: postId },
       relations: relations, // 关联查询
@@ -150,6 +150,7 @@ export class PostsService {
     const query = this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'author')
+      .innerJoinAndSelect('post.tags', 'tag')
       .innerJoin('author.posts', 'author_posts') // 关联用户的文章
       .where((qb) => {
         this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
@@ -171,6 +172,7 @@ export class PostsService {
     const totalQuery = this.postRepository
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'author')
+      .innerJoinAndSelect('post.tags', 'tag')
       .innerJoin('author.posts', 'author_posts') // 关联用户的文章
       .where((qb) => {
         this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
@@ -208,7 +210,34 @@ export class PostsService {
     const post = await this.findOne(updatePost.id, false);
     try {
       updatePost.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-      await this.postRepository.update({ id: post.id }, updatePost);
+      const updateObject = {
+        title: updatePost.title,
+        content: updatePost.content,
+        update_time: updatePost.update_time,
+      };
+      if (updatePost.tags) {
+        const updatedTags = await this.tagRepository.find({
+          where: { id: In(updatePost.tags) },
+        });
+        // 取消旧标签
+        for (const tag of post.tags) {
+          tag.postCount -= 1;
+          await this.tagRepository.save(tag);
+        }
+        // 更新文章的标签
+        post.tags = updatedTags;
+        for (const tag of updatedTags) {
+          tag.postCount += 1;
+          await this.tagRepository.save(tag);
+        }
+      } else {
+        post.tags = [];
+      }
+      post.title = updateObject.title;
+      post.content = updateObject.content;
+      post.update_time = updateObject.update_time;
+      // 保存文章及其标签的更新
+      await this.postRepository.save(post);
       return {
         data: '文章修改成功',
       };

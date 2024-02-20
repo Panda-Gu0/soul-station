@@ -33,6 +33,6 @@ export class UpdatePostDto {
 
   update_time: Date;
 
-  //   @IsOptional()
-  //   tags?: number[];
+  @IsOptional()
+  tags?: number[];
 }

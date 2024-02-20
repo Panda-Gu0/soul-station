@@ -20,5 +20,8 @@ export class TagService {
         name: tag.name
       });
       await this.tagRepository.save(newTag);
+      return {
+        data: "新建标签成功"
+      }
     }
 }
