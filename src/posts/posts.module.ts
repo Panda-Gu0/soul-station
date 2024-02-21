@@ -17,5 +17,6 @@ import { Tag } from 'src/tag/entities/tag.entity';
     TagModule,
   ],
   providers: [PostsService, UploadService],
+  exports: [PostsService]
 })
 export class PostsModule {}

@@ -6,15 +6,12 @@ import { Tag } from './entities/tag.entity';
 import { Repository } from 'typeorm';
 import { FindAllTagsDto } from './dto/findAll-tag.dto';
 import * as moment from 'moment';
-import { Posts } from 'src/posts/entities/post.entity';
 
 @Injectable()
 export class TagService {
   constructor(
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
-    @InjectRepository(Posts)
-    private postRepository: Repository<Posts>,
   ) { }
 
   /**

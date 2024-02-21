@@ -1,5 +1,4 @@
 import {
-  AfterInsert,
   Column,
   Entity,
   ManyToMany,

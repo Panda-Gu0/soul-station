@@ -12,6 +12,7 @@ import * as crypto from 'crypto';
 import { Role } from 'src/role/entities/role.entity';
 import { Exclude } from 'class-transformer';
 import { Posts } from 'src/posts/entities/post.entity';
+import { Comment } from 'src/comment/entities/comment.entity';
 
 @Entity('user')
 export class User {
@@ -55,6 +56,9 @@ export class User {
 
   @OneToMany(() => Posts, (post) => post.author)
   posts: Posts[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 
   @Exclude()
   @Column({ nullable: true })
