@@ -167,14 +167,10 @@ export class PostsService {
           qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
         }
         // 多个标签筛选文章
-        let tagIdsArr = [];
-        if (tagIds) {
-          tagIdsArr = JSON.parse(tagIds);
-        }
-        if (tagIdsArr && tagIdsArr.length > 0) {
-          for (let i = 0; i < tagIdsArr.length; i++) {
+        if (tagIds && tagIds.length > 0) {
+          for (let i = 0; i < tagIds.length; i++) {
             qb.andWhere(`EXISTS (SELECT 1 FROM post_tag_relation WHERE post_tag_relation.postId = post.id AND post_tag_relation.tagId = :tagId${i})`)
-              .setParameter(`tagId${i}`, tagIdsArr[i]);
+              .setParameter(`tagId${i}`, tagIds[i]);
           }
         }
       })

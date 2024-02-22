@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
+import { ApiErrorCode } from 'src/common/enums/api-error-code.enum';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -41,7 +42,7 @@ export class AuthGuard implements CanActivate {
       });
       request['user'] = payload;
     } catch {
-      throw new HttpException('token已过期,请重新登录', HttpStatus.FORBIDDEN);
+      throw new HttpException('token已过期,请重新登录', ApiErrorCode.LOGIN_EXPIRE);
     }
     return true;
   }

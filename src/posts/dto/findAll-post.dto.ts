@@ -39,7 +39,6 @@ import {
     endUpdateTime?: Date;
 
     @IsOptional()
-    @Matches(/^\[\d+(, \d+)*\]$|^$/, { message: 'tagIds格式错误' })
-    tagIds?: string;
+    tagIds?: number[];
   }
   

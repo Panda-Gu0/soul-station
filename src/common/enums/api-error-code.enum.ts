@@ -10,7 +10,7 @@ export enum ApiErrorCode {
   ROLE_EXIST = 10005, //角色已存在
   PASSWORD_ERROR = 20005, //密码错误
   FORBIDDEN = 400, //验证不通过
-  LOGIN_EXPIRE = 401, //登录状态已过期
+  LOGIN_EXPIRE = 424, //登录状态已过期
   Forbidden = 403, //权限不足
   DATABASE_ERROR = 30001, //数据库错误
 }
