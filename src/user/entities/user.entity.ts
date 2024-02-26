@@ -13,6 +13,7 @@ import { Role } from 'src/role/entities/role.entity';
 import { Exclude } from 'class-transformer';
 import { Posts } from 'src/posts/entities/post.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
+import { Apply } from 'src/apply/entities/apply.entity';
 
 @Entity('user')
 export class User {
@@ -53,6 +54,12 @@ export class User {
     name: 'user_role_relation',
   })
   roles: Role[]; // 角色类型
+
+  @Column({ nullable: true })
+  solgan: string; // 个性签名(心理咨询师专有)
+
+  @OneToMany(() => Apply, (apply) => apply.user)
+  applies: Apply[];
 
   @OneToMany(() => Posts, (post) => post.author)
   posts: Posts[];
