@@ -42,6 +42,15 @@ export class UserController {
     return this.userService.update(username, updateUser);
   }
 
+  @Public()
+  @Put('updateRole')
+  async upateRole(
+    @Query('username') username: string,
+    @Body() { newRoleIds }: { newRoleIds: number[] },
+  ) {
+    return this.userService.updateRole(username, newRoleIds);
+  }
+
   @Post('uploadAvatar')
   @UseInterceptors(FileInterceptor('file', multerConfig))
   async uploadAvatar(

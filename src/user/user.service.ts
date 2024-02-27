@@ -237,6 +237,25 @@ export class UserService {
     };
   }
 
+  /**
+   * 修改用户角色类型
+   * @param newRoleIds - 角色类型id数组
+   */
+  async updateRole(username: string, newRoleIds: number[]) {
+    const user = await this.findOne(username);
+    const roles = await this.roleRepository.find({
+      where: {
+        id: In(newRoleIds),
+      },
+    });
+    user.roles = roles;
+    user.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    await this.userRepository.save(user);
+    return {
+      data: '角色类型修改成功',
+    };
+  }
+
   test(testParams) {
     return testParams;
   }

@@ -148,7 +148,9 @@ export class CommentService {
       .where((qb) => {
         this.getTimeRange(qb, startCreateTime, endCreateTime);
         if (username) {
-          qb.andWhere('user.username = :username', { username }); // 添加根据用户名的查询条件
+          qb.andWhere('user.username LIKE :username', {
+            username: `%${username}%`,
+          }); // 添加根据用户名的查询条件
         }
         if (title) {
           qb.andWhere('post.title LIKE :title', { title: `%${title}%` }); // 添加根据标题的查询条件

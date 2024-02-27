@@ -21,7 +21,7 @@ export class PostsService {
     private uploadService: UploadService,
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
-  ) { }
+  ) {}
   /**
    * 敏感数据过滤
    */
@@ -107,12 +107,12 @@ export class PostsService {
     }
     if (isDetail) {
       post.readingCount += 1; // 增加阅读量
-      for (const tag of post.tags) { // 增加标签点击量
+      for (const tag of post.tags) {
+        // 增加标签点击量
         tag.clickCount += 1;
         await this.tagRepository.save(tag);
       }
       await this.postRepository.save(post);
-
     }
     return this.dataFilter(post);
   }
@@ -164,13 +164,16 @@ export class PostsService {
         this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);
         this.getTimeRange(qb, 'update_time', startUpdateTime, endUpdateTime);
         if (username) {
-          qb.andWhere('author.username = :username', { username }); // 添加根据用户名的查询条件
+          qb.andWhere('author.username LIKE :username', {
+            username: `%${username}%`,
+          }); // 添加根据用户名的查询条件
         }
         // 多个标签筛选文章
         if (tagIds && tagIds.length > 0) {
           for (let i = 0; i < tagIds.length; i++) {
-            qb.andWhere(`EXISTS (SELECT 1 FROM post_tag_relation WHERE post_tag_relation.postId = post.id AND post_tag_relation.tagId = :tagId${i})`)
-              .setParameter(`tagId${i}`, tagIds[i]);
+            qb.andWhere(
+              `EXISTS (SELECT 1 FROM post_tag_relation WHERE post_tag_relation.postId = post.id AND post_tag_relation.tagId = :tagId${i})`,
+            ).setParameter(`tagId${i}`, tagIds[i]);
           }
         }
       })
