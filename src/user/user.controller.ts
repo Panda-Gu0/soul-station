@@ -28,6 +28,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Public()
   @Get()
   async findAll(@Query() options: FindAllUserDto) {
     const users = await this.userService.findAll(options);

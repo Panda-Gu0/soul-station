@@ -159,6 +159,7 @@ export class PostsService {
       .createQueryBuilder('post')
       .innerJoinAndSelect('post.author', 'author')
       .leftJoinAndSelect('post.tags', 'tag')
+      .leftJoinAndSelect('post.comments', 'comment')
       .innerJoin('author.posts', 'author_posts') // 关联用户的文章
       .where((qb) => {
         this.getTimeRange(qb, 'create_time', startCreateTime, endCreateTime);

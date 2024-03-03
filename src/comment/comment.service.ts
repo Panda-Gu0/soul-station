@@ -83,6 +83,8 @@ export class CommentService {
     const parentComment = comment.parentCommentId
       ? await this.findOne(comment.parentCommentId)
       : null;
+    console.log('parentComment', parentComment);
+
     if (parentComment && parentComment.post.id !== comment.postId) {
       throw new HttpException(
         '新评论与父级评论的文章id不一致',
@@ -101,6 +103,8 @@ export class CommentService {
       parentComment.replies.push(newComment);
       await this.commentRepository.save(parentComment);
     }
+    console.log('parentComment', parentComment);
+
     return this.dataFilter(newComment);
   }
 
@@ -111,7 +115,7 @@ export class CommentService {
     if (!commentId) {
       throw new HttpException('评论id不能为空', HttpStatus.NOT_FOUND);
     }
-    let relations = ['user', 'post', 'parentComment'];
+    let relations = ['user', 'post', 'replies'];
     const comment = await this.commentRepository.findOne({
       where: { id: commentId },
       relations, // 关联查询
