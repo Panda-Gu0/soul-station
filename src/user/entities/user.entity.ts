@@ -14,6 +14,7 @@ import { Exclude } from 'class-transformer';
 import { Posts } from 'src/posts/entities/post.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { Apply } from 'src/apply/entities/apply.entity';
+import { Consultations } from 'src/consultation/entities/consultation.entity';
 
 @Entity('user')
 export class User {
@@ -58,11 +59,17 @@ export class User {
   @Column({ nullable: true })
   solgan: string; // 个性签名(心理咨询师专有)
 
+  @Column({ nullable: true, default: 0 })
+  serviceCount: number; // 服务次数(心理咨询师专有)
+
   @OneToMany(() => Apply, (apply) => apply.user)
   applies: Apply[];
 
   @OneToMany(() => Posts, (post) => post.author)
   posts: Posts[];
+
+  @OneToMany(() => Consultations, (consultation) => consultation.user)
+  consultations: Consultations[];
 
   @OneToMany(() => Comment, (comment) => comment.user)
   comments: Comment[];

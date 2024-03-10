@@ -12,6 +12,7 @@ import { PostsModule } from './posts/posts.module';
 import { TagModule } from './tag/tag.module';
 import { CommentModule } from './comment/comment.module';
 import { ApplyModule } from './apply/apply.module';
+import { ConsultationModule } from './consultation/consultation.module';
 import * as path from 'path';
 const isProd = process.env.NODE_ENV == "production";
 
@@ -39,7 +40,8 @@ const isProd = process.env.NODE_ENV == "production";
     PostsModule,
     TagModule,
     CommentModule,
-    ApplyModule
+    ApplyModule,
+    ConsultationModule
   ],
   controllers: [AppController],
   providers: [AppService],
