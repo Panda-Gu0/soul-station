@@ -13,6 +13,7 @@ import { TagModule } from './tag/tag.module';
 import { CommentModule } from './comment/comment.module';
 import { ApplyModule } from './apply/apply.module';
 import { ConsultationModule } from './consultation/consultation.module';
+import { MessageModule } from './message/message.module';
 import * as path from 'path';
 const isProd = process.env.NODE_ENV == "production";
 
@@ -41,7 +42,8 @@ const isProd = process.env.NODE_ENV == "production";
     TagModule,
     CommentModule,
     ApplyModule,
-    ConsultationModule
+    ConsultationModule,
+    MessageModule
   ],
   controllers: [AppController],
   providers: [AppService],
