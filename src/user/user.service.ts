@@ -256,6 +256,39 @@ export class UserService {
     };
   }
 
+  judgeIsCounselor(counselor: any) {
+    let isCounselor = false;
+    counselor.roles.forEach((e: any) => {
+      if (e.id == '4') {
+        isCounselor = true;
+      }
+    });
+    return isCounselor;
+  }
+
+  /**
+   * 给心理咨询师评分(前端先调用用户结束订单接口，再调用评分接口)
+   * @param graderName - 打分者用户名
+   * @param counselorName - 心理咨询师用户名
+   */
+  async mark(graderName: string, counselorName: string, score: number) {
+    const grader = await this.findOne(graderName);
+    const counselor = await this.findOne(counselorName);
+    if (this.judgeIsCounselor(grader)) {
+      throw new HttpException('心理咨询师无法进行打分', HttpStatus.BAD_REQUEST);
+    }
+    if (!this.judgeIsCounselor(counselor)) {
+      throw new HttpException('只能给心理咨询师打分', HttpStatus.BAD_REQUEST);
+    }
+    counselor.rate =
+      (counselor.rate * counselor.serviceCount + score) /
+      counselor.serviceCount;
+    await this.userRepository.save(counselor);
+    return {
+      data: '评分成功',
+    };
+  }
+
   test(testParams) {
     return testParams;
   }

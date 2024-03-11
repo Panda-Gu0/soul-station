@@ -62,6 +62,9 @@ export class User {
   @Column({ nullable: true, default: 0 })
   serviceCount: number; // 服务次数(心理咨询师专有)
 
+  @Column({ nullable: true, default: 0, type: 'float' })
+  rate: number; // 评分(心理咨询师专有)
+
   @OneToMany(() => Apply, (apply) => apply.user)
   applies: Apply[];
 

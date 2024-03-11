@@ -66,6 +66,16 @@ export class UserController {
     return this.userService.delete(username);
   }
 
+  @Public()
+  @Post('rate')
+  async mark(
+    @Query('graderName') graderName: string,
+    @Query('counselorName') counselorName: string,
+    @Query('score') score: number,
+  ) {
+    return this.userService.mark(graderName, counselorName, score);
+  }
+
   @Post('test')
   @Permissions('read', 'create')
   test(@Body() testParams) {
