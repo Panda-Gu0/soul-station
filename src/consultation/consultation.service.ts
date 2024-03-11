@@ -5,6 +5,7 @@ import { Consultations } from './entities/consultation.entity';
 import { UserService } from 'src/user/user.service';
 import * as moment from 'moment';
 import { User } from 'src/user/entities/user.entity';
+import { FindAllConsultationDto } from './dto/findAll-consultation.dto';
 
 @Injectable()
 export class ConsultationService {
@@ -62,7 +63,7 @@ export class ConsultationService {
     if (!orderId) {
       throw new HttpException('咨询订单id不能为空', HttpStatus.NOT_FOUND);
     }
-    let relations = [];
+    let relations = ['user'];
     const order = await this.consultationRepository.findOne({
       where: { id: orderId },
       relations, // 关联查询
@@ -75,6 +76,8 @@ export class ConsultationService {
 
   /**
    * 用户结束咨询服务
+   * @param orderId - 订单id
+   * @param username - 订单创建者用户名
    */
   async completeTask(orderId: number, username: string) {
     if (!orderId) {
@@ -96,5 +99,30 @@ export class ConsultationService {
     const counselor = order.counselor;
     counselor.serviceCount++;
     await this.userRepository.save(counselor);
+  }
+
+  /**
+   * 查询所有心理咨询订单
+   * @param options - 查询参数
+   */
+  async findAll(options: FindAllConsultationDto) {
+    const { username, counselorName } = options;
+    const query = this.consultationRepository
+      .createQueryBuilder('consultation')
+      .leftJoinAndSelect('consultation.user', 'user')
+      .leftJoinAndSelect('consultation.counselor', 'counselor');
+    if (username) {
+      query.andWhere('user.username LIKE :username', {
+        username: `%${username}%`,
+      });
+    }
+
+    if (counselorName) {
+      query.andWhere('counselor.username LIKE :counselorName', {
+        counselorName: `%${counselorName}%`,
+      });
+    }
+    const consultations = await query.getMany();
+    return consultations;
   }
 }

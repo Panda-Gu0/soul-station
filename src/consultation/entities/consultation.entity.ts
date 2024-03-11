@@ -1,9 +1,11 @@
+import { Message } from 'src/message/entities/message.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -27,6 +29,9 @@ export class Consultations {
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'counselor_id' })
   counselor: User; // 订单接收者(心理咨询师)
+
+  @OneToMany(() => Message, (message) => message.consultation)
+  message: Message[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   create_time: Date;

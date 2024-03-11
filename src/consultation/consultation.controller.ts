@@ -11,6 +11,7 @@ import {
 import { Public } from 'src/public/public.decorator';
 import { ConsultationService } from './consultation.service';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
+import { FindAllConsultationDto } from './dto/findAll-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
 
 @Controller('consultation')
@@ -38,5 +39,11 @@ export class ConsultationController {
     @Query('orderId') orderId: number,
   ) {
     return await this.consultationService.completeTask(orderId, username);
+  }
+
+  @Public()
+  @Get()
+  async findAll(@Query() options: FindAllConsultationDto) {
+    return await this.consultationService.findAll(options);
   }
 }
