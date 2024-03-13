@@ -280,9 +280,16 @@ export class UserService {
     if (!this.judgeIsCounselor(counselor)) {
       throw new HttpException('只能给心理咨询师打分', HttpStatus.BAD_REQUEST);
     }
+    counselor.serviceCount++;
+    await this.userRepository.save(counselor);
     counselor.rate =
-      (counselor.rate * counselor.serviceCount + score) /
-      counselor.serviceCount;
+      (Number(counselor.rate) * Number(counselor.serviceCount - 1) +
+        Number(score)) /
+      Number(counselor.serviceCount);
+    console.log('serviceCount', counselor.serviceCount);
+    console.log('score', score);
+    console.log('counselor.rate', counselor.rate);
+
     await this.userRepository.save(counselor);
     return {
       data: '评分成功',

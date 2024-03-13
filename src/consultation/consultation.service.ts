@@ -49,10 +49,7 @@ export class ConsultationService {
       user,
       counselor,
     });
-    await this.consultationRepository.save(newConsultation);
-    return {
-      data: '咨询订单创建成功',
-    };
+    return await this.consultationRepository.save(newConsultation);
   }
 
   /**
@@ -96,9 +93,9 @@ export class ConsultationService {
     order.update_time = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     await this.consultationRepository.save(order);
     // 心理咨询师数据更新
-    const counselor = order.counselor;
-    counselor.serviceCount++;
-    await this.userRepository.save(counselor);
+    // const counselor = order.counselor;
+    // counselor.serviceCount++;
+    // await this.userRepository.save(counselor);
   }
 
   /**
