@@ -9,6 +9,7 @@ import * as moment from 'moment';
 import { FindAllPostsDto } from './dto/findAll-post.dto';
 import { UploadService } from 'src/upload/upload.service';
 import { Tag } from 'src/tag/entities/tag.entity';
+import { Comment } from 'src/comment/entities/comment.entity';
 
 type AllowedField = 'create_time' | 'update_time';
 
@@ -21,6 +22,8 @@ export class PostsService {
     private uploadService: UploadService,
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
+    @InjectRepository(Comment)
+    private commentRepository: Repository<Comment>,
   ) {}
   /**
    * 敏感数据过滤
@@ -97,7 +100,7 @@ export class PostsService {
     if (!postId) {
       throw new HttpException('文章id不能为空!', HttpStatus.NOT_FOUND);
     }
-    let relations = ['author', 'tags'];
+    let relations = ['author', 'tags', 'comments'];
     const post = await this.postRepository.findOne({
       where: { id: postId },
       relations: relations, // 关联查询
@@ -278,13 +281,26 @@ export class PostsService {
    */
   async deletePost(postId: number) {
     const post = await this.findOne(postId, false);
+    const comments = post.comments;
+
     try {
+      // 删除与文章相关的评论
+      await Promise.all(
+        comments.map(async (comment) => {
+          await this.commentRepository.delete(comment.id);
+        }),
+      );
+
+      // 更新与文章相关的标签的 postCount
       const tags = post.tags;
       for (const tag of tags) {
         tag.postCount -= 1;
         await this.tagRepository.save(tag);
       }
+
+      // 最后删除文章本身
       await this.postRepository.delete(post.id);
+
       return {
         data: '文章删除成功',
       };
