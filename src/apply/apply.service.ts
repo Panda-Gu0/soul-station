@@ -38,11 +38,10 @@ export class ApplyService {
   }
 
   /** 新建申请 */
-  async create(apply: CreateApplyDto, file: Express.Multer.File) {
+  async create(username: string, file: Express.Multer.File) {
     if (!file) {
       throw new HttpException('申请资料不能为空', HttpStatus.BAD_REQUEST);
     }
-    const { username } = apply;
     const user = await this.userService.findOne(username);
     let isConsultant = user.roles.some((role) => role.id == '4');
     if (isConsultant) {

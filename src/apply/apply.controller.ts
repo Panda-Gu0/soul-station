@@ -25,10 +25,10 @@ export class ApplyController {
   @Post('create')
   @UseInterceptors(FileInterceptor('file', multerConfig))
   async create(
-    @Body() apply: CreateApplyDto,
+    @Query('username') username: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.applyService.create(apply, file);
+    return this.applyService.create(username, file);
   }
 
   @Public()
